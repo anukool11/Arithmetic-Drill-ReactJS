@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Hello!</title>
+        <style>
+            #app {
+                text-align: center;
+                font-family: sans-serif;
+            }
+
+            #problem {
+                font-size: 72px;
+            }
+
+            #winner {
+                font-size: 72px;
+                color: green;
+            }
+
+            .incorrect {
+                color: red;
+            }
+
+            #content{
+                margin-left: 30%;
+                width: 40%;
+                margin-right: 30%;
+                text-align: center;
+            }
+
+            #contact{
+                botton: 5px;
+            }
+        </style>
+        <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+        <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    </head>
+    <body>
+        <div id="app"></div>
+        <script type="text/babel">
+
+            class App extends React.Component {
+
+                constructor(props) {
+                    super(props);
+                    this.state = {
+                        num1: Math.ceil(Math.random()*100),
+                        num2: Math.ceil(Math.random()*100),
+                        response: "",
+                        score: 0,
+                        incorrect: false,
+                        time: {}, 
+                        seconds: 120,
+                        game: 0,
+                        items: [],
+                        operator: '+',
+                    };
+                    this.timer = 0;
+                    this.startTimer = this.startTimer.bind(this);
+                    this.countDown = this.countDown.bind(this);
+                    this.renderProblem = this.renderProblem.bind(this);
+                    this.play = this.play.bind(this);
+                    this.prepareQuestion = this.prepareQuestion.bind(this);
+                }
+                
+                render() {
+                    if(this.state.game == 0){
+                        return this.renderStartScreen();
+                    }
+                    else if(this.state.seconds<=0){
+                        return (
+                            <div>
+                            <h1>Time Over </h1>
+                            <h3>You scored: {this.state.score}</h3>
+                            </div>
+                        )
+                    }
+                     else {
+                        return this.renderProblem();
+                    }
+                }
+
+                renderStartScreen(){
+                    return (
+                    <div id = 'page'>
+                        <h2>Arithmetic Drill</h2>
+                        <p id = 'content'>Arithmetic Drill is a countdown based calculation game where you have to solve as many arithmetic problems as you can in the alloted time frame. For every correct answer you are awarded 1 point while for every incorrect answer your score is deducted by 1</p>
+                        <form className="form" name="elem" autoComplete="on">
+                        
+                        <input type="checkbox" name="extras" value="+" defaultChecked="True"/>Addition
+                        
+                        <input type="checkbox" name="extras" value="-"/>Subtraction
+                        
+                        <input type="checkbox" name="extras" value="*"/>Multiplication
+                        
+                        <input type="checkbox" name="extras" value="/"/>Division
+                        
+                        </form>
+                        
+                        <button onClick={this.play}>Play</button>
+                        <div id='contact'>
+                            <p>Contact: <a href='mailto:anukoolraj11@gmail.com'>anukoolraj11@gmail.com</a> </p>
+                        </div>
+                    </div>
+                    )
+                }
+
+                renderProblem() {
+                    return (
+                        <div>
+                            {this.startTimer()}
+                            <div> Time left = {this.state.time.m} : {this.state.time.s}</div>
+                            <div className={this.state.incorrect ? "incorrect" : ""} id="problem">{this.state.num1} {this.state.operator}  {this.state.num2}</div>
+                            <input onKeyPress={this.inputKeyPress} onChange={this.updateResponse} autoFocus={true} value={this.state.response} />
+                            <div>Score: {this.state.score}</div>
+                        </div>
+                    );
+                }
+
+                secondsToTime(secs){
+                    let hours = Math.floor(secs / (60 * 60));
+
+                    let divisor_for_minutes = secs % (60 * 60);
+                    let minutes = Math.floor(divisor_for_minutes / 60);
+
+                    let divisor_for_seconds = divisor_for_minutes % 60;
+                    let seconds = Math.ceil(divisor_for_seconds);
+
+                    let obj = {
+                    "h": hours,
+                    "m": minutes,
+                    "s": seconds
+                    };
+                    return obj;
+                }
+
+            componentDidMount() {
+                let timeLeftVar = this.secondsToTime(this.state.seconds);
+                this.setState({ time: timeLeftVar });
+            }
+
+            startTimer() {
+                if (this.timer == 0 && this.state.seconds > 0) {
+                this.timer = setInterval(this.countDown, 1000);
+                }
+            }
+
+            countDown() {
+                // Remove one second, set state so a re-render happens.
+                let seconds = this.state.seconds - 1;
+                this.setState({
+                time: this.secondsToTime(seconds),
+                seconds: seconds,
+                });
+                
+                // Check if we're at zero.
+                if (seconds == 0) { 
+                clearInterval(this.timer);
+                }
+            }
+            play(){
+                    var it = []
+                    for (var i=0;i< document.getElementsByName("extras").length;i++){
+                        if ( document.getElementsByName("extras")[i].checked) {
+                            it.push(document.getElementsByName("extras")[i].value);
+                        }
+                    }
+                    var opr= it[Math.floor(Math.random() * it.length)];
+                    this.setState({ game: 1,
+                                    items: it,
+                                    operator: it[Math.floor(Math.random() * it.length)]
+                                });
+                    this.prepareQuestion(opr);  
+            }
+            getAnswer(n1, n2, op){
+                var ans=0;
+                if(op=='+'){
+                ans=n1+n2;
+                }
+                if(op=='-'){
+                ans=n1-n2;
+                }
+                if(op=='*'){
+                ans=n1*n2;
+                }
+                if(op=='/'){
+                ans=n1/n2;
+                }
+                return ans
+            }
+            prepareQuestion(op){
+                var n1= Math.ceil(Math.random() * 100);
+                var n2= Math.ceil(Math.random() * 100);
+                var max= Math.max(n1, n2);
+                var min= Math.min(n1, n2);
+
+                if(op == '-'){
+                    n1=max;
+                    n2=min;
+                }
+                if(op == '/'){
+                    var divisor = Math.ceil(Math.random() * 100);
+                    var quotient = Math.ceil(Math.random() * 20);
+                    var dividend = divisor*quotient; 
+                    n1=dividend;
+                    n2=divisor;
+                }
+                this.setState(state => ({
+                                num1: n1,
+                                num2: n2,
+                                operator: op
+                }));
+            }
+            inputKeyPress = (event) => {
+                    if (event.key === "Enter") {
+                        const answer = parseInt(this.state.response);
+                        var op = this.state.items[Math.floor(Math.random() * this.state.items.length)];
+                        if (answer === this.getAnswer(this.state.num1, this.state.num2, this.state.operator)) {
+                            // User got question right
+                            this.prepareQuestion(op);
+                            this.setState(state => ({
+                                score: state.score + 1,
+                                response: "",
+                                incorrect: false
+                            }));
+                        } else {
+                            // User got question wrong
+                            this.setState(state => ({
+                                score: state.score - 1,
+                                incorrect: true,
+                                response: ""
+                            }));
+                        }
+                    }
+                }
+
+                updateResponse = (event) => {
+                    this.setState({
+                        response: event.target.value
+                    });
+                }
+
+            }
+
+            ReactDOM.render(<App />, document.querySelector("#app"));
+        </script>
+    </body>
+</html>
